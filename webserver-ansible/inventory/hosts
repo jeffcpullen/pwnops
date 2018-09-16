@@ -1,0 +1,5 @@
+[web-servers]
+localhost ansible_connection=local
+
+[web-servers:vars]
+ansible_become=yes

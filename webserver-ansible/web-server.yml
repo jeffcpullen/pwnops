@@ -1,0 +1,55 @@
+---
+- hosts: web-servers
+  vars:
+    apache_vhosts:
+    - {servername: "www.domain.tld", documentroot: "/var/www/html/one"}
+    - {servername: "www.otherdomain.tld", documentroot: "/var/www/html/two"}
+  tasks:
+
+  - name: Install EPEL
+    yum:
+      name: epel-release
+      state: present
+
+  - name: Install httpd
+    yum:
+      name: httpd
+      state: present
+
+  - name: Open firewalld to allow web server
+    firewalld:
+      service: "{{ item }}"
+      permanent: true
+      state: enabled
+    with_items:
+      - https
+      - http
+    notify: reload firewalld
+
+  - name: Ensure web root directories exist
+    file:
+      name: "{{ item.documentroot }}"
+      state: directory
+    loop: "{{ apache_vhosts }}"
+
+  - name: Deploy virtual hosts file to Apache
+    template:
+      src: vhosts.conf.j2
+      dest: /etc/httpd/conf.d/vhosts.conf
+    notify: restart apache
+
+  - name: Ensure Apache is started and running
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+
+  handlers:
+
+  - name: restart apache
+    service:
+      name: httpd
+      state: restarted
+
+  - name: reload firewalld
+    command: "firewall-cmd --reload"
