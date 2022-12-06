@@ -1,0 +1,5 @@
+---
+# defaults file for docker_machine
+
+docker_machine_latest: false
+docker_machine_vm_name: 'default'

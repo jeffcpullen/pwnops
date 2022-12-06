@@ -1,0 +1,53 @@
+---
+# tasks file for docker_machine
+
+- name: Set upgrade fact
+  ansible.builtin.set_fact:
+    brew_package_state: latest
+  when: docker_machine_latest
+
+- name: Get and store brew path prefix
+  command: "{{ docker_machine_brew_path }} --prefix"
+  register: _docker_machine_brew_prefix
+  changed_when: _docker_machine_brew_prefix.rc != 0
+
+- name: Install docker-machine
+  community.general.homebrew:
+    name: "{{ docker_machine_install_cask }}"
+    state: "{{ brew_package_state | default('present', true) }}"
+    update_homebrew: "{{ docker_machine_upgrade | default(omit) }}"
+
+- name: Store absolute path to xhvye path
+  ansible.builtin.set_fact:
+    _docker_machine_xhvye_full_path: "{{ _docker_machine_brew_prefix.stdout }}/{{ docker_machine_driver_xhvye_path }}"
+
+- name: Check file permissions for xhvye binary"
+  ansible.builtin.file:
+    name: "{{ _docker_machine_xhvye_full_path }}"
+    owner: root
+    group: wheel
+    mode: u+s
+    state: file
+  check_mode: true
+  register: _docker_machine_xhvye_file_stat
+
+- name: Debug file permission results
+  ansible.builtin.debug:
+    var: _docker_machine_xhvye_file_stat
+    verbosity: 2
+
+- name: Become root to modify permissions
+  when: _docker_machine_xhvye_file_stat.changed
+  become: true
+  block:
+
+    - name: Modify xhvye binary permissions
+      ansible.builtin.file:
+        name: "{{ _docker_machine_xhvye_full_path }}"
+        owner: root
+        group: wheel
+        mode: u+s
+
+- name: Start docker-machine
+  command: "{{ docker_machine_docker_machine_path }} create -d xhyve {{ docker_machine_vm_name }}"
+  when: docker_machine_vm_name is defined

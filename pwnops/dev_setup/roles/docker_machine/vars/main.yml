@@ -1,0 +1,9 @@
+---
+# vars file for docker_machine
+
+# docker_machine_driver_xhyve_bin: docker-machine-driver-xhyve
+# docker_machine_driver_xhvye_dir: /opt/docker-machine-driver-xhyve/bin
+docker_machine_install_cask: docker-machine-driver-xhyve
+docker_machine_driver_xhvye_path: opt/docker-machine-driver-xhyve/bin/docker-machine-driver-xhyve
+docker_machine_brew_path: /usr/local/bin/brew
+docker_machine_docker_machine_path: /usr/local/bin/docker-machine
